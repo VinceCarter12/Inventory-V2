@@ -128,11 +128,12 @@ function EditAssetContent() {
             <CardContent style={{ padding: 24 }}>
               <div style={{ fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 20 }}>Asset Details</div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+              <div className="grid-form-2">
 
                 <div style={{ gridColumn: "span 2" }}>
-                  <Label className="field-label">Asset Name *</Label>
+                  <Label htmlFor="edit-asset-name" className="field-label">Asset Name *</Label>
                   <Input
+                    id="edit-asset-name"
                     className="field-input mt-1.5"
                     value={form.name}
                     onChange={(e) => set("name", e.target.value)}
@@ -141,8 +142,9 @@ function EditAssetContent() {
                 </div>
 
                 <div>
-                  <Label className="field-label">Serial Number</Label>
+                  <Label htmlFor="edit-asset-serial" className="field-label">Serial Number</Label>
                   <Input
+                    id="edit-asset-serial"
                     className="field-input mt-1.5"
                     value={form.serialNumber}
                     onChange={(e) => set("serialNumber", e.target.value)}
@@ -150,24 +152,24 @@ function EditAssetContent() {
                 </div>
 
                 <div>
-                  <Label className="field-label">Category</Label>
-                  <select className="field-select mt-1.5" value={form.categoryId} onChange={(e) => set("categoryId", e.target.value)}>
+                  <Label htmlFor="edit-asset-category" className="field-label">Category</Label>
+                  <select id="edit-asset-category" className="field-select mt-1.5" value={form.categoryId} onChange={(e) => set("categoryId", e.target.value)}>
                     <option value="">— Select category —</option>
                     {lookup.categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
                 </div>
 
                 <div>
-                  <Label className="field-label">Site</Label>
-                  <select className="field-select mt-1.5" value={form.siteId} onChange={(e) => set("siteId", e.target.value)}>
+                  <Label htmlFor="edit-asset-site" className="field-label">Site</Label>
+                  <select id="edit-asset-site" className="field-select mt-1.5" value={form.siteId} onChange={(e) => set("siteId", e.target.value)}>
                     <option value="">— Select site —</option>
                     {lookup.sites.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                   </select>
                 </div>
 
                 <div>
-                  <Label className="field-label">Condition</Label>
-                  <select className="field-select mt-1.5" value={form.condition} onChange={(e) => set("condition", e.target.value)}>
+                  <Label htmlFor="edit-asset-condition" className="field-label">Condition</Label>
+                  <select id="edit-asset-condition" className="field-select mt-1.5" value={form.condition} onChange={(e) => set("condition", e.target.value)}>
                     <option value="usable">Usable</option>
                     <option value="for_repair">For Repair</option>
                     <option value="for_disposal">For Disposal</option>
@@ -175,16 +177,17 @@ function EditAssetContent() {
                 </div>
 
                 <div>
-                  <Label className="field-label">Ownership</Label>
-                  <select className="field-select mt-1.5" value={form.ownership} onChange={(e) => set("ownership", e.target.value)}>
+                  <Label htmlFor="edit-asset-ownership" className="field-label">Ownership</Label>
+                  <select id="edit-asset-ownership" className="field-select mt-1.5" value={form.ownership} onChange={(e) => set("ownership", e.target.value)}>
                     <option value="company">Company</option>
                     <option value="personal">Personal</option>
                   </select>
                 </div>
 
                 <div style={{ gridColumn: "span 2" }}>
-                  <Label className="field-label">Description</Label>
+                  <Label htmlFor="edit-asset-description" className="field-label">Description</Label>
                   <Textarea
+                    id="edit-asset-description"
                     className="field-input mt-1.5"
                     value={form.description}
                     onChange={(e) => set("description", e.target.value)}

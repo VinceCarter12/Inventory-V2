@@ -82,7 +82,7 @@ export default function EmployeesPage() {
       <div style={{ flex: 1, overflowY: "auto", padding: "0 24px 24px" }}>
 
         {/* KPI strip */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12, marginBottom: 14 }}>
+        <div className="grid-kpi-3">
           {loading ? (
             [0, 1, 2].map((i) => (
               <Card key={i}>

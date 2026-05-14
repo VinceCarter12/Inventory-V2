@@ -35,17 +35,17 @@ export default function ReportsPage() {
       <div style={{ flex: 1, overflowY: "auto", padding: "0 24px 24px" }}>
 
         {/* KPI row */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginBottom: 14 }}>
+        <div className="grid-kpi-4">
           {[
             { label: "Total Assets", val: "248", badge: "▲ 4.2%", badgeStyle: { background: "rgba(198,255,0,.15)", color: "var(--lime)", borderColor: "transparent" } },
             { label: "Assigned", val: "184", badge: "74% rate", badgeStyle: { background: "rgba(198,255,0,.12)", color: "var(--lime)", borderColor: "transparent" } },
             { label: "For Repair", val: "31", badge: "▲ +4 this wk", badgeStyle: { background: "rgba(255,90,78,.12)", color: "var(--coral)", borderColor: "transparent" } },
-            { label: "Disposal", val: "12", badge: "No change", badgeStyle: { background: "rgba(255,255,255,.08)", color: "#9CA3AF", borderColor: "transparent" } },
+            { label: "Disposal", val: "12", badge: "No change", badgeStyle: { background: "rgba(255,255,255,.08)", color: "var(--muted-foreground)", borderColor: "transparent" } },
           ].map((k) => (
             <Card key={k.label}>
               <CardContent style={{ padding: "16px 18px" }}>
                 <div style={{ fontSize: 11, fontWeight: 600, color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: ".05em" }}>{k.label}</div>
-                <div style={{ fontSize: 26, fontWeight: 800, color: "#fff", marginTop: 6 }}>{k.val}</div>
+                <div style={{ fontSize: 26, fontWeight: 800, color: "#fff", marginTop: 6, fontVariantNumeric: "tabular-nums" }}>{k.val}</div>
                 <Badge style={k.badgeStyle}>{k.badge}</Badge>
               </CardContent>
             </Card>
@@ -53,7 +53,7 @@ export default function ReportsPage() {
         </div>
 
         {/* Charts row */}
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 12, marginBottom: 14 }}>
+        <div className="grid-report-charts">
           <Card>
             <CardContent style={{ padding: 20 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
@@ -83,7 +83,7 @@ export default function ReportsPage() {
                   <g key={label as string}>
                     <rect x={x1} y={y1} width="30" height={h1} rx="4" fill="url(#hl2)" />
                     <rect x={x2} y={y2} width="30" height={h2} rx="4" fill="#7B5CF5" opacity=".7" />
-                    <text x={lx} y="158" fill="#4B5563" fontSize="9" textAnchor="middle">{label as string}</text>
+                    <text x={lx} y="158" fill="#6B7280" fontSize="9" textAnchor="middle">{label as string}</text>
                   </g>
                 ))}
               </svg>
@@ -99,11 +99,11 @@ export default function ReportsPage() {
                   ["Monitors", 54, "54%", "var(--purple)"],
                   ["Peripherals", 62, "60%", "var(--lime)", .6],
                   ["Mobile", 28, "32%", "var(--purple)", .6],
-                  ["Printers", 18, "22%", "#4B5563"],
+                  ["Printers", 18, "22%", "#6B7280"],
                 ].map(([label, count, w, color, op]) => (
                   <div key={label as string}>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#9CA3AF", marginBottom: 4 }}>
-                      <span>{label as string}</span><span style={{ color: "#fff", fontWeight: 700 }}>{count as number}</span>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "var(--muted-foreground)", marginBottom: 4 }}>
+                      <span>{label as string}</span><span style={{ color: "#fff", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{count as number}</span>
                     </div>
                     <div style={{ height: 6, background: "rgba(255,255,255,.08)", borderRadius: 4, overflow: "hidden" }}>
                       <div style={{ height: "100%", width: w as string, background: color as string, borderRadius: 4, opacity: (op as number) ?? 1 }} />

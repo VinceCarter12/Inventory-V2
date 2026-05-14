@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -60,23 +61,14 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{ display: "flex", width: "100vw", height: "100vh", overflow: "hidden", background: "#16181A" }}>
+    <div className="login-wrap">
 
       {/* ── Left panel ──────────────────────────────────────────────── */}
-      <div style={{
-        width: 460,
-        flexShrink: 0,
-        display: "flex",
-        flexDirection: "column",
-        padding: "40px 48px",
-        background: "#16181A",
-        position: "relative",
-        zIndex: 1,
-      }}>
+      <div className="login-left">
         {/* Wordmark */}
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: "auto" }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/oracle-logo.png" alt="Oracle Petroleum" width={40} height={40} style={{ objectFit: "contain", display: "block" }} />
+          <Image src="/oracle-logo.png" alt="Oracle Petroleum" width={40} height={40} style={{ objectFit: "contain", display: "block" }} priority />
           <div>
             <div style={{ fontSize: 13, fontWeight: 800, color: "#E8E8E8", letterSpacing: "-.01em", lineHeight: 1.1 }}>
               ORACLE
@@ -111,10 +103,11 @@ export default function LoginPage() {
             <form onSubmit={handleSubmit}>
               {/* Email */}
               <div style={{ marginBottom: 16 }}>
-                <Label style={{ fontSize: 11, fontWeight: 600, color: "#6B7280", marginBottom: 6, display: "block", textTransform: "uppercase", letterSpacing: ".05em" }}>
+                <Label htmlFor="login-email" style={{ fontSize: 11, fontWeight: 600, color: "#6B7280", marginBottom: 6, display: "block", textTransform: "uppercase", letterSpacing: ".05em" }}>
                   Email address
                 </Label>
                 <input
+                  id="login-email"
                   type="email"
                   placeholder="jay@oracle.com"
                   value={email}
@@ -129,11 +122,12 @@ export default function LoginPage() {
 
               {/* Password */}
               <div style={{ marginBottom: error ? 12 : 10 }}>
-                <Label style={{ fontSize: 11, fontWeight: 600, color: "#6B7280", marginBottom: 6, display: "block", textTransform: "uppercase", letterSpacing: ".05em" }}>
+                <Label htmlFor="login-password" style={{ fontSize: 11, fontWeight: 600, color: "#6B7280", marginBottom: 6, display: "block", textTransform: "uppercase", letterSpacing: ".05em" }}>
                   Password
                 </Label>
                 <div style={{ position: "relative" }}>
                   <input
+                    id="login-password"
                     type={showPass ? "text" : "password"}
                     placeholder="••••••••••••"
                     value={password}
@@ -147,6 +141,8 @@ export default function LoginPage() {
                     type="button"
                     variant="ghost"
                     size="icon"
+                    aria-label={showPass ? "Hide password" : "Show password"}
+                    aria-pressed={showPass}
                     onClick={() => setShowPass(v => !v)}
                     style={{
                       position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)",
@@ -154,13 +150,13 @@ export default function LoginPage() {
                     }}
                   >
                     {showPass ? (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                         <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
                         <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
                         <line x1="1" y1="1" x2="23" y2="23" />
                       </svg>
                     ) : (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                         <circle cx="12" cy="12" r="3" />
                       </svg>
@@ -170,19 +166,21 @@ export default function LoginPage() {
               </div>
 
               {/* Error */}
-              {error && (
-                <div style={{
-                  background: "rgba(255,90,78,.1)",
-                  border: "1px solid rgba(255,90,78,.2)",
-                  borderRadius: 8,
-                  padding: "9px 12px",
-                  fontSize: 12,
-                  color: "var(--coral)",
-                  marginBottom: 12,
-                }}>
-                  {error}
-                </div>
-              )}
+              <div role="alert" aria-live="polite">
+                {error && (
+                  <div style={{
+                    background: "rgba(255,90,78,.1)",
+                    border: "1px solid rgba(255,90,78,.2)",
+                    borderRadius: 8,
+                    padding: "9px 12px",
+                    fontSize: 12,
+                    color: "var(--coral)",
+                    marginBottom: 12,
+                  }}>
+                    {error}
+                  </div>
+                )}
+              </div>
 
               {/* Forgot password */}
               <div style={{ textAlign: "right", marginBottom: 24 }}>
@@ -209,7 +207,7 @@ export default function LoginPage() {
           marginTop: "auto",
           paddingTop: 32,
           fontSize: 11,
-          color: "#4B5563",
+          color: "var(--muted-foreground)",
           textAlign: "center",
           letterSpacing: ".01em",
         }}>
@@ -218,19 +216,13 @@ export default function LoginPage() {
       </div>
 
       {/* ── Right panel — Oracle building photo ─────────────────────── */}
-      <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+      <div className="login-right">
+        <Image
           src="/oracle-building.jpg"
           alt="Oracle Petroleum headquarters"
-          style={{
-            position: "absolute",
-            inset: 0,
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            objectPosition: "center",
-          }}
+          fill
+          style={{ objectFit: "cover", objectPosition: "center" }}
+          priority
         />
         <div style={{
           position: "absolute",
@@ -243,9 +235,7 @@ export default function LoginPage() {
             display: "inline-flex",
             alignItems: "center",
             gap: 8,
-            background: "rgba(22,24,26,0.72)",
-            backdropFilter: "blur(12px)",
-            WebkitBackdropFilter: "blur(12px)",
+            background: "rgba(22,24,26,0.88)",
             border: "1px solid rgba(255,255,255,0.1)",
             borderRadius: 12,
             padding: "10px 16px",

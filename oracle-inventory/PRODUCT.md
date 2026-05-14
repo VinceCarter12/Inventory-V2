@@ -50,10 +50,11 @@ product
 
 ## Typography
 
-- Font: Inter (400/500/600/700/800/900)
-- Body: 13px
-- Labels: 11px uppercase tracking
-- Headings: 22px 800 weight
+- UI font: IBM Plex Sans (400/600/700/800), fallback: ui-sans-serif, system-ui
+- Data font: IBM Plex Mono (400/600), fallback: ui-monospace — used exclusively for serial numbers, asset IDs, employee IDs
+- Body: 13px (density choice for desk-use admin tool)
+- Labels: 11px, 600 weight, uppercase, 0.05em tracking
+- Headings: 22px, 700–800 weight, -0.02em tracking
 
 ## Navigation (Sidebar)
 

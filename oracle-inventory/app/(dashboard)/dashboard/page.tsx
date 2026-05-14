@@ -54,6 +54,7 @@ function ChartSkeleton() {
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [kpi, setKpi] = useState<KpiData>({ total: 0, assigned: 0, needsAttention: 0 });
+  const [fillReady, setFillReady] = useState(false);
 
   useEffect(() => {
     apiFetch("/api/assets")
@@ -68,14 +69,13 @@ export default function DashboardPage() {
       .catch(() => setLoading(false));
   }, []);
 
+  // Trigger progress animation on the next frame after data is ready
   useEffect(() => {
     if (!loading) {
-      document.querySelectorAll<HTMLElement>(".progress-fill[data-w]").forEach((el) => {
-        el.style.setProperty("--fill", "0");
-        requestAnimationFrame(() => {
-          el.style.setProperty("--fill", String(Number(el.dataset.w) / 100));
-        });
-      });
+      setFillReady(false);
+      requestAnimationFrame(() => setFillReady(true));
+    } else {
+      setFillReady(false);
     }
   }, [loading]);
 
@@ -116,27 +116,27 @@ export default function DashboardPage() {
           const assignedPct = kpi.total > 0 ? Math.round((kpi.assigned / kpi.total) * 100) : 0;
           const attentionPct = kpi.total > 0 ? Math.round((kpi.needsAttention / kpi.total) * 100) : 0;
           const KPI_DATA = [
-            { label: "Total Assets", fill: "linear-gradient(90deg,#3B82F6,#60A5FA)", w: kpi.total > 0 ? 83 : 0, amount: String(kpi.total), sub: "Inventory Count", pct: `${kpi.total} items`, pctColor: "#fff" },
-            { label: "Assigned Assets", fill: "linear-gradient(90deg,#8BBF00,var(--lime))", w: assignedPct, amount: String(kpi.assigned), sub: "Active Assignments", pct: `${assignedPct}%`, pctColor: "#fff" },
-            { label: "For Repair / Disposal", fill: "linear-gradient(90deg,#C53030,var(--coral))", w: attentionPct, amount: String(kpi.needsAttention), sub: "Requires Attention", pct: attentionPct > 20 ? "Over limit" : `${attentionPct}%`, pctColor: kpi.needsAttention > 0 ? "var(--coral)" : "var(--muted-foreground)" },
+            { label: "Total Assets", fill: "#7B5CF5", w: kpi.total > 0 ? 83 : 0, amount: String(kpi.total), sub: "Inventory Count", pct: `${kpi.total} items`, pctColor: "#fff" },
+            { label: "Assigned Assets", fill: "#C6FF00", w: assignedPct, amount: String(kpi.assigned), sub: "Active Assignments", pct: `${assignedPct}%`, pctColor: "#fff" },
+            { label: "For Repair / Disposal", fill: "#FF5A4E", w: attentionPct, amount: String(kpi.needsAttention), sub: "Requires Attention", pct: attentionPct > 20 ? "Over limit" : `${attentionPct}%`, pctColor: kpi.needsAttention > 0 ? "var(--coral)" : "var(--muted-foreground)" },
           ];
           return (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12, marginBottom: 14 }}>
+            <div className="grid-kpi-3">
               {loading
                 ? [0, 1, 2].map(i => <KpiSkeleton key={i} />)
                 : KPI_DATA.map((k) => (
                   <Card key={k.label} style={{ position: "relative", overflow: "hidden" }}>
                     <CardContent style={{ padding: "16px 18px" }}>
-                      <div style={{ position: "absolute", top: 12, right: 12, width: 20, height: 20, borderRadius: "9999px", background: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", color: "#4B5563", fontSize: 12 }}>×</div>
+                      <div aria-hidden="true" style={{ position: "absolute", top: 12, right: 12, width: 20, height: 20, borderRadius: "9999px", background: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: 12 }}>×</div>
                       <div style={{ fontSize: 11, fontWeight: 600, color: "var(--muted-foreground)", letterSpacing: ".05em", textTransform: "uppercase" }}>{k.label}</div>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 6 }}>
                         <span style={{ fontSize: 11, color: "var(--muted-foreground)" }}>Live count</span>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: "#fff" }}>{k.amount}</span>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: "#fff", fontVariantNumeric: "tabular-nums" }}>{k.amount}</span>
                       </div>
                       <div className="progress-track">
-                        <div className="progress-fill" data-w={k.w} style={{ background: k.fill }} />
+                        <div className="progress-fill" style={{ background: k.fill, "--fill": fillReady ? String(k.w / 100) : "0" } as React.CSSProperties} />
                       </div>
-                      <div style={{ fontSize: 20, fontWeight: 800, color: "#fff" }}>{k.amount}</div>
+                      <div style={{ fontSize: 20, fontWeight: 800, color: "#fff", fontVariantNumeric: "tabular-nums" }}>{k.amount}</div>
                       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--muted-foreground)", marginTop: 2 }}>
                         <span>{k.sub}</span>
                         <span style={{ color: k.pctColor, fontWeight: 700 }}>{k.pct}</span>
@@ -150,7 +150,7 @@ export default function DashboardPage() {
         })()}
 
         {/* Charts grid */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <div className="grid-charts-2">
 
           {loading ? (
             <>
@@ -184,31 +184,31 @@ export default function DashboardPage() {
                     </defs>
                     {[20, 52, 84, 116, 148].map(y => <line key={y} x1="40" x2="546" y1={y} y2={y} stroke="rgba(255,255,255,.06)" strokeWidth="1" />)}
                     {[["28%", 24], ["24%", 56], ["20%", 88], ["16%", 120], ["12%", 152]].map(([label, y]) => (
-                      <text key={y as number} x="34" y={y as number} fill="#4B5563" fontSize="9" textAnchor="end">{label}</text>
+                      <text key={y as number} x="34" y={y as number} fill="#6B7280" fontSize="9" textAnchor="end">{label}</text>
                     ))}
                     <rect x="73" y="40" width="18" height="108" rx="4" fill="url(#hatch-lime)" />
                     <rect x="101" y="100" width="18" height="48" rx="4" fill="url(#hatch-purple)" />
-                    <text x="98" y="165" fill="#4B5563" fontSize="9" textAnchor="middle">Sat</text>
+                    <text x="98" y="165" fill="#6B7280" fontSize="9" textAnchor="middle">Sat</text>
                     <text x="98" y="175" fill="#6B7280" fontSize="8" textAnchor="middle">49</text>
                     <rect x="146" y="24" width="18" height="124" rx="4" fill="url(#hatch-lime)" />
                     <rect x="174" y="92" width="18" height="56" rx="4" fill="url(#hatch-purple)" />
-                    <text x="171" y="165" fill="#4B5563" fontSize="9" textAnchor="middle">Sun</text>
+                    <text x="171" y="165" fill="#6B7280" fontSize="9" textAnchor="middle">Sun</text>
                     <text x="171" y="175" fill="#6B7280" fontSize="8" textAnchor="middle">82</text>
                     <rect x="218" y="36" width="18" height="112" rx="4" fill="url(#hatch-lime)" />
                     <rect x="246" y="96" width="18" height="52" rx="4" fill="url(#hatch-purple)" />
-                    <text x="244" y="165" fill="#4B5563" fontSize="9" textAnchor="middle">Mon</text>
+                    <text x="244" y="165" fill="#6B7280" fontSize="9" textAnchor="middle">Mon</text>
                     <text x="244" y="175" fill="#6B7280" fontSize="8" textAnchor="middle">70</text>
                     <rect x="291" y="30" width="18" height="118" rx="4" fill="url(#hatch-lime)" />
                     <rect x="319" y="88" width="18" height="60" rx="4" fill="url(#hatch-purple)" />
-                    <text x="316" y="165" fill="#4B5563" fontSize="9" textAnchor="middle">Tue</text>
+                    <text x="316" y="165" fill="#6B7280" fontSize="9" textAnchor="middle">Tue</text>
                     <text x="316" y="175" fill="#6B7280" fontSize="8" textAnchor="middle">78</text>
                     <rect x="364" y="60" width="18" height="88" rx="4" fill="#7B5CF5" opacity=".85" />
                     <rect x="392" y="104" width="18" height="44" rx="4" fill="#7B5CF5" opacity=".45" />
-                    <text x="389" y="165" fill="#4B5563" fontSize="9" textAnchor="middle">Wed</text>
+                    <text x="389" y="165" fill="#6B7280" fontSize="9" textAnchor="middle">Wed</text>
                     <text x="389" y="175" fill="#6B7280" fontSize="8" textAnchor="middle">28</text>
                     <rect x="437" y="68" width="18" height="80" rx="4" fill="#7B5CF5" opacity=".85" />
                     <rect x="465" y="108" width="18" height="40" rx="4" fill="#7B5CF5" opacity=".45" />
-                    <text x="462" y="165" fill="#4B5563" fontSize="9" textAnchor="middle">Thu</text>
+                    <text x="462" y="165" fill="#6B7280" fontSize="9" textAnchor="middle">Thu</text>
                     <text x="462" y="175" fill="#6B7280" fontSize="8" textAnchor="middle">15</text>
                   </svg>
                 </CardContent>
@@ -274,7 +274,7 @@ export default function DashboardPage() {
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 3v18h18" stroke="var(--lime)" strokeWidth="2" strokeLinecap="round" fill="none" /><rect x="7" y="8" width="14" height="4" rx="2" fill="var(--lime)" opacity=".4" /><rect x="7" y="14" width="9" height="4" rx="2" fill="var(--lime)" opacity=".4" /></svg>
                     <h3 style={{ fontSize: 14, fontWeight: 700, color: "#fff", flex: 1 }}>Inventory by Department</h3>
                     <div style={{ display: "flex", gap: 12 }}>
-                      {[["var(--lime)", "IT"], ["var(--purple)", "Finance"], ["#4B5563", "Ops"]].map(([c, l]) => (
+                      {[["var(--lime)", "IT"], ["var(--purple)", "Finance"], ["#6B7280", "Ops"]].map(([c, l]) => (
                         <span key={l} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "var(--muted-foreground)" }}>
                           <span style={{ width: 10, height: 10, borderRadius: "9999px", background: c, display: "inline-block" }} />{l}
                         </span>
@@ -283,9 +283,9 @@ export default function DashboardPage() {
                     <span style={{ color: "var(--muted-foreground)", fontSize: 18, cursor: "pointer" }}>···</span>
                   </div>
                   {[
-                    { label: "IT", segs: [["44%", "var(--lime)", ".9"], ["14%", "var(--purple)", ".7"], ["8%", "#4B5563", ".6"]], total: "86" },
-                    { label: "Finance", segs: [["28%", "var(--lime)", ".9"], ["18%", "var(--purple)", ".7"], ["6%", "#4B5563", ".6"]], total: "52" },
-                    { label: "Operations", segs: [["22%", "var(--lime)", ".9"], ["10%", "var(--purple)", ".7"], ["10%", "#4B5563", ".6"]], total: "42" },
+                    { label: "IT", segs: [["44%", "var(--lime)", ".9"], ["14%", "var(--purple)", ".7"], ["8%", "#6B7280", ".6"]], total: "86" },
+                    { label: "Finance", segs: [["28%", "var(--lime)", ".9"], ["18%", "var(--purple)", ".7"], ["6%", "#6B7280", ".6"]], total: "52" },
+                    { label: "Operations", segs: [["22%", "var(--lime)", ".9"], ["10%", "var(--purple)", ".7"], ["10%", "#6B7280", ".6"]], total: "42" },
                     { label: "Design", segs: [["18%", "var(--lime)", ".9"], ["8%", "var(--purple)", ".7"]], total: "26" },
                     { label: "Engineering", segs: [["16%", "var(--lime)", ".9"], ["6%", "var(--purple)", ".7"]], total: "22" },
                     { label: "HR", segs: [["10%", "var(--lime)", ".9"], ["4%", "var(--purple)", ".7"]], total: "20" },
@@ -335,7 +335,7 @@ export default function DashboardPage() {
                         <path d="M0,90 L70,78 L140,72 L210,60 L280,48 L350,42 L420,50 L490,38 L560,30" fill="none" stroke="var(--lime)" strokeWidth="2" />
                         <circle cx="490" cy="38" r="5" fill="var(--lime)" />
                         {[["Jan", 0], ["Feb", 67], ["Mar", 134], ["Apr", 202], ["May", 274], ["Jun", 342], ["Jul", 406], ["Aug", 479]].map(([l, x]) => (
-                          <text key={l} x={x as number} y="147" fill="#4B5563" fontSize="9">{l}</text>
+                          <text key={l} x={x as number} y="147" fill="#6B7280" fontSize="9">{l}</text>
                         ))}
                       </svg>
                     </div>

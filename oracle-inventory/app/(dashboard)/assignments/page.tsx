@@ -145,7 +145,15 @@ export default function AssignmentsPage() {
                       {new Date(a.assignedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                     </TableCell>
                     <TableCell>{statusBadge(a.status)}</TableCell>
-                    <TableCell className="text-muted-foreground text-right cursor-pointer">⋯</TableCell>
+                    <TableCell className="text-right">
+                      <button
+                        type="button"
+                        aria-label="More actions"
+                        style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: 18, padding: "2px 6px", borderRadius: 4, lineHeight: 1 }}
+                      >
+                        ⋯
+                      </button>
+                    </TableCell>
                   </TableRow>
                 ))
               )}

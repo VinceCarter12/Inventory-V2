@@ -1,0 +1,24 @@
+{
+  "name": "inventory-v1",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VinceCarter12/Oracle-Inventory.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/VinceCarter12/Oracle-Inventory/issues"
+  },
+  "homepage": "https://github.com/VinceCarter12/Oracle-Inventory#readme",
+  "dependencies": {
+    "basic-ftp": "^6.0.1"
+  }
+}

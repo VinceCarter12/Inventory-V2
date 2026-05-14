@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -92,8 +93,8 @@ const NAV = [
 function NavItem({ n, active }: { n: (typeof NAV)[0]; active: boolean }) {
   return (
     <Tooltip>
-      <TooltipTrigger render={<Link href={n.href} className={`sb-item ${active ? "active" : ""}`} />}>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">{n.svg}</svg>
+      <TooltipTrigger render={<Link href={n.href} aria-label={n.label} aria-current={active ? "page" : undefined} className={`sb-item ${active ? "active" : ""}`} />}>
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none">{n.svg}</svg>
       </TooltipTrigger>
       <TooltipContent side="right" sideOffset={8}>
         {n.label}
@@ -110,10 +111,10 @@ export default function Sidebar() {
   const bottomNav = NAV.slice(4);
 
   return (
-    <aside className="sb" style={{ margin: "12px 0 12px 12px" }}>
+    <aside className="sb" aria-label="Primary navigation" style={{ margin: "12px 0 12px 12px" }}>
       {/* Logo */}
       <div className="sb-logo" style={{ background: "transparent", padding: 2 }}>
-        <img src="/oracle-logo.png" alt="Oracle" width={32} height={32} style={{ objectFit: "contain", display: "block" }} />
+        <Image src="/oracle-logo.png" alt="Oracle" width={32} height={32} style={{ objectFit: "contain", display: "block" }} priority />
       </div>
 
       {topNav.map((n) => (
@@ -128,7 +129,7 @@ export default function Sidebar() {
 
       {/* User avatar */}
       <Avatar className="mt-auto cursor-pointer" style={{ width: 32, height: 32 }}>
-        <AvatarFallback style={{ background: "#252829", color: "#9CA3AF", fontSize: 11, fontWeight: 800 }}>
+        <AvatarFallback style={{ background: "#252829", color: "#6B7280", fontSize: 11, fontWeight: 800 }}>
           SJ
         </AvatarFallback>
       </Avatar>
