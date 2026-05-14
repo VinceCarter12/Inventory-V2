@@ -46,7 +46,6 @@ async function upload() {
 
     console.log(`\n[3/3] Uploading to ${FTP.remotePath}...`);
     await client.ensureDir(FTP.remotePath);
-    await client.clearWorkingDir();
     await client.uploadFromDir(OUT_DIR);
     console.log("✓ Upload complete");
 
