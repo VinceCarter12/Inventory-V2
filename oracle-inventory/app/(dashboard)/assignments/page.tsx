@@ -1,9 +1,10 @@
 "use client";
 
 import TopBar from "@/components/TopBar";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
@@ -13,35 +14,65 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { apiFetch } from "@/lib/auth";
 
-const ROWS = [
-  ["Dell XPS 15 Laptop", "LAP-0241", "Maria Santos", "IT Dept", "Manila HQ", "Mar 12", "Active", "active"],
-  ["Logitech MX Keys", "KB-0118", "Jun Reyes", "HR", "Manila HQ", "Apr 02", "Active", "active"],
-  ["HP Z27 Monitor", "MON-0334", "Marco Cruz", "Finance", "Manila HQ", "Jan 18", "Active", "active"],
-  ["iPad Air 5", "TAB-0034", "Anna Lim", "Operations", "Cebu", "May 06", "Pending", "pending"],
-  ["MacBook Pro 14\"", "LAP-0299", "Priya Natarajan", "Design", "Manila HQ", "Feb 25", "Active", "active"],
-  ["Cisco IP Phone", "PHN-0042", "Daniel Kim", "Engineering", "Cebu", "Apr 22", "Active", "active"],
-  ["Brother L2540 Printer", "PR-0088", "—", "—", "Service Bay", "May 05", "Returned", "returned"],
-  ["Dell U2723QE", "MON-0341", "Aaron Cruz", "Finance", "Manila HQ", "Mar 30", "Active", "active"],
-];
+interface Assignment {
+  id: string;
+  status: "active" | "returned" | "transferred";
+  assignedAt: string;
+  returnedAt: string | null;
+  asset: {
+    id: string;
+    name: string;
+    serialNumber: string | null;
+    category: { id: string; name: string } | null;
+    site: { id: string; name: string } | null;
+  };
+  employee: {
+    id: string;
+    name: string;
+    employeeId: string;
+    department: { id: string; name: string } | null;
+    site: { id: string; name: string } | null;
+  } | null;
+}
 
-function statusBadge(key: string, label: string) {
-  switch (key) {
+function statusBadge(status: string) {
+  switch (status) {
     case "active":
-      return <Badge style={{ background: "rgba(198,255,0,.12)", color: "#C6FF00", borderColor: "transparent" }}>{label}</Badge>;
-    case "pending":
-      return <Badge style={{ background: "rgba(255,193,7,.1)", color: "#FFC107", borderColor: "transparent" }}>{label}</Badge>;
+      return <Badge style={{ background: "rgba(198,255,0,.12)", color: "#C6FF00", borderColor: "transparent" }}>Active</Badge>;
+    case "transferred":
+      return <Badge style={{ background: "rgba(255,193,7,.1)", color: "#FFC107", borderColor: "transparent" }}>Transferred</Badge>;
     case "returned":
-      return <Badge style={{ background: "rgba(255,255,255,.07)", color: "#6B7280", borderColor: "transparent" }}>{label}</Badge>;
+      return <Badge style={{ background: "rgba(255,255,255,.07)", color: "#6B7280", borderColor: "transparent" }}>Returned</Badge>;
     default:
-      return <Badge variant="secondary">{label}</Badge>;
+      return <Badge variant="secondary">{status}</Badge>;
   }
 }
 
-const TABS = ["All", "Active", "Pending", "Returned"];
+const TABS = ["All", "Active", "Returned", "Transferred"];
 
 export default function AssignmentsPage() {
   const [activeTab, setActiveTab] = useState("All");
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    apiFetch("/api/assignments")
+      .then((r) => r.json())
+      .then((data) => {
+        setAssignments(data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const filtered = assignments.filter((a) => {
+    if (activeTab === "All") return true;
+    return a.status === activeTab.toLowerCase();
+  });
+
+  const activeCount = assignments.filter((a) => a.status === "active").length;
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", background: "var(--bg)", borderRadius: 16 }}>
@@ -65,7 +96,10 @@ export default function AssignmentsPage() {
         <div className="d-card" style={{ overflow: "hidden" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
             <span style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>
-              Active assignments <span style={{ color: "var(--muted)", fontWeight: 500 }}>· 184</span>
+              Active assignments{" "}
+              <span style={{ color: "var(--muted)", fontWeight: 500 }}>
+                · {loading ? "…" : activeCount}
+              </span>
             </span>
             <div style={{ display: "flex", gap: 8 }}>
               {["Dept ▾", "Site ▾", "Sort ▾"].map(f => (
@@ -79,42 +113,47 @@ export default function AssignmentsPage() {
           <Table>
             <TableHeader>
               <TableRow style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                {["Asset", "Tag", "Assignee", "Dept", "Site", "Since", "Status", ""].map(h => (
+                {["Asset", "Serial No.", "Assignee", "Dept", "Site", "Since", "Status", ""].map(h => (
                   <TableHead key={h} className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--muted)" }}>{h}</TableHead>
                 ))}
               </TableRow>
             </TableHeader>
             <TableBody>
-              {ROWS.map(([asset, tag, assignee, dept, site, since, status, key]) => (
-                <TableRow key={tag} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                  <TableCell className="font-semibold text-white">{asset}</TableCell>
-                  <TableCell className="font-mono text-xs text-muted-foreground">{tag}</TableCell>
-                  <TableCell style={{ color: "#E8E8E8" }}>{assignee}</TableCell>
-                  <TableCell className="text-muted-foreground">{dept}</TableCell>
-                  <TableCell className="text-muted-foreground">{site}</TableCell>
-                  <TableCell className="text-muted-foreground">{since}</TableCell>
-                  <TableCell>{statusBadge(key, status)}</TableCell>
-                  <TableCell className="text-muted-foreground text-right cursor-pointer">⋯</TableCell>
+              {loading ? (
+                [0, 1, 2, 3, 4].map((i) => (
+                  <TableRow key={i} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                    {[0, 1, 2, 3, 4, 5, 6, 7].map((j) => (
+                      <TableCell key={j}><Skeleton className="h-3 w-full" /></TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : filtered.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} style={{ textAlign: "center", color: "var(--muted)", padding: "32px 0" }}>
+                    No assignments found.
+                  </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                filtered.map((a) => (
+                  <TableRow key={a.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                    <TableCell className="font-semibold text-white">{a.asset.name}</TableCell>
+                    <TableCell className="font-mono text-xs text-muted-foreground">{a.asset.serialNumber ?? "—"}</TableCell>
+                    <TableCell style={{ color: "#E8E8E8" }}>{a.employee?.name ?? "—"}</TableCell>
+                    <TableCell className="text-muted-foreground">{a.employee?.department?.name ?? "—"}</TableCell>
+                    <TableCell className="text-muted-foreground">{a.asset.site?.name ?? a.employee?.site?.name ?? "—"}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {new Date(a.assignedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                    </TableCell>
+                    <TableCell>{statusBadge(a.status)}</TableCell>
+                    <TableCell className="text-muted-foreground text-right cursor-pointer">⋯</TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
 
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 20px", borderTop: "1px solid rgba(255,255,255,0.06)", fontSize: 11, color: "var(--muted)" }}>
-            <span>Showing 8 of 184</span>
-            <div style={{ display: "flex", gap: 4 }}>
-              {["‹", "1", "2", "3", "›"].map((p, i) => (
-                <Button
-                  key={i}
-                  variant="ghost"
-                  size="sm"
-                  className="w-7 h-7 p-0 rounded-full text-xs"
-                  style={p === "1" ? { background: "var(--lime)", color: "#0F1112", fontWeight: 700 } : { background: "rgba(255,255,255,.06)", color: "var(--muted)" }}
-                >
-                  {p}
-                </Button>
-              ))}
-            </div>
+            <span>Showing {filtered.length} of {assignments.length}</span>
           </div>
         </div>
       </div>

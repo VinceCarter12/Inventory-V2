@@ -5,12 +5,20 @@ import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { apiFetch } from "@/lib/auth";
 
-const KPI_DATA = [
-  { label: "Total Assets", target: "300", fill: "linear-gradient(90deg,#3B82F6,#60A5FA)", w: 83, amount: "248", sub: "Inventory Count", pct: "82.7%", pctColor: "#fff" },
-  { label: "Assigned Assets", target: "220", fill: "linear-gradient(90deg,#8BBF00,var(--lime))", w: 74, amount: "184", sub: "Leads & Assignments", pct: "74%", pctColor: "#fff" },
-  { label: "For Repair / Disposal", target: "20", fill: "linear-gradient(90deg,#C53030,var(--coral))", w: 43, amount: "43", sub: "Requires Attention", pct: "Over limit", pctColor: "var(--coral)" },
-];
+interface Asset {
+  id: string;
+  condition: "usable" | "for_repair" | "for_disposal";
+  assignments: { id: string; status: string }[];
+}
+
+interface KpiData {
+  total: number;
+  assigned: number;
+  needsAttention: number;
+}
+
 
 function KpiSkeleton() {
   return (
@@ -45,10 +53,19 @@ function ChartSkeleton() {
 
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
+  const [kpi, setKpi] = useState<KpiData>({ total: 0, assigned: 0, needsAttention: 0 });
 
   useEffect(() => {
-    const t = setTimeout(() => setLoading(false), 800);
-    return () => clearTimeout(t);
+    apiFetch("/api/assets")
+      .then((r) => r.json())
+      .then((assets: Asset[]) => {
+        const total = assets.length;
+        const assigned = assets.filter((a) => a.assignments.some((x) => x.status === "active")).length;
+        const needsAttention = assets.filter((a) => a.condition === "for_repair" || a.condition === "for_disposal").length;
+        setKpi({ total, assigned, needsAttention });
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
   }, []);
 
   useEffect(() => {
@@ -67,8 +84,8 @@ export default function DashboardPage() {
       <TopBar title="Asset Overview" actionLabel="Add Asset">
         <Button
           size="sm"
-          className="rounded-full gap-1.5 font-bold text-xs h-[34px] px-3.5"
-          style={{ background: "var(--lime)", color: "#0F1112" }}
+          variant="outline"
+          className="rounded-full gap-1.5 font-bold text-xs h-[34px] px-3.5 border-white/10 bg-card text-muted-foreground hover:text-white"
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
             <rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" />
@@ -95,31 +112,42 @@ export default function DashboardPage() {
       <div style={{ flex: 1, overflowY: "auto", padding: "0 24px 24px" }}>
 
         {/* KPI row */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12, marginBottom: 14 }}>
-          {loading
-            ? [0, 1, 2].map(i => <KpiSkeleton key={i} />)
-            : KPI_DATA.map((k) => (
-              <Card key={k.label} style={{ position: "relative", overflow: "hidden" }}>
-                <CardContent style={{ padding: "16px 18px" }}>
-                  <div style={{ position: "absolute", top: 12, right: 12, width: 20, height: 20, borderRadius: "9999px", background: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", color: "#4B5563", fontSize: 12 }}>×</div>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: "var(--muted)", letterSpacing: ".05em", textTransform: "uppercase" }}>{k.label}</div>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 6 }}>
-                    <span style={{ fontSize: 11, color: "var(--muted)" }}>Year Target</span>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: "#fff" }}>{k.target}</span>
-                  </div>
-                  <div className="progress-track">
-                    <div className="progress-fill" data-w={k.w} style={{ background: k.fill }} />
-                  </div>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: "#fff" }}>{k.amount}</div>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--muted)", marginTop: 2 }}>
-                    <span>{k.sub}</span>
-                    <span style={{ color: k.pctColor, fontWeight: 700 }}>{k.pct}</span>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          }
-        </div>
+        {(() => {
+          const assignedPct = kpi.total > 0 ? Math.round((kpi.assigned / kpi.total) * 100) : 0;
+          const attentionPct = kpi.total > 0 ? Math.round((kpi.needsAttention / kpi.total) * 100) : 0;
+          const KPI_DATA = [
+            { label: "Total Assets", fill: "linear-gradient(90deg,#3B82F6,#60A5FA)", w: kpi.total > 0 ? 83 : 0, amount: String(kpi.total), sub: "Inventory Count", pct: `${kpi.total} items`, pctColor: "#fff" },
+            { label: "Assigned Assets", fill: "linear-gradient(90deg,#8BBF00,var(--lime))", w: assignedPct, amount: String(kpi.assigned), sub: "Active Assignments", pct: `${assignedPct}%`, pctColor: "#fff" },
+            { label: "For Repair / Disposal", fill: "linear-gradient(90deg,#C53030,var(--coral))", w: attentionPct, amount: String(kpi.needsAttention), sub: "Requires Attention", pct: attentionPct > 20 ? "Over limit" : `${attentionPct}%`, pctColor: kpi.needsAttention > 0 ? "var(--coral)" : "var(--muted)" },
+          ];
+          return (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12, marginBottom: 14 }}>
+              {loading
+                ? [0, 1, 2].map(i => <KpiSkeleton key={i} />)
+                : KPI_DATA.map((k) => (
+                  <Card key={k.label} style={{ position: "relative", overflow: "hidden" }}>
+                    <CardContent style={{ padding: "16px 18px" }}>
+                      <div style={{ position: "absolute", top: 12, right: 12, width: 20, height: 20, borderRadius: "9999px", background: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", color: "#4B5563", fontSize: 12 }}>×</div>
+                      <div style={{ fontSize: 11, fontWeight: 600, color: "var(--muted)", letterSpacing: ".05em", textTransform: "uppercase" }}>{k.label}</div>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 6 }}>
+                        <span style={{ fontSize: 11, color: "var(--muted)" }}>Live count</span>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: "#fff" }}>{k.amount}</span>
+                      </div>
+                      <div className="progress-track">
+                        <div className="progress-fill" data-w={k.w} style={{ background: k.fill }} />
+                      </div>
+                      <div style={{ fontSize: 20, fontWeight: 800, color: "#fff" }}>{k.amount}</div>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--muted)", marginTop: 2 }}>
+                        <span>{k.sub}</span>
+                        <span style={{ color: k.pctColor, fontWeight: 700 }}>{k.pct}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              }
+            </div>
+          );
+        })()}
 
         {/* Charts grid */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
@@ -198,38 +226,44 @@ export default function DashboardPage() {
                     </div>
                     <span style={{ color: "var(--muted)", fontSize: 18, cursor: "pointer" }}>···</span>
                   </div>
-                  <div style={{ display: "flex", gap: 24, justifyContent: "center", alignItems: "center", height: 180 }}>
-                    <div style={{ textAlign: "center" }}>
-                      <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", width: 140, height: 140 }}>
-                        <svg viewBox="0 0 140 140" width="140" height="140">
-                          <circle cx="70" cy="70" r="52" fill="none" stroke="rgba(198,255,0,.12)" strokeWidth="18" />
-                          <circle cx="70" cy="70" r="52" fill="none" stroke="var(--lime)" strokeWidth="18" strokeDasharray="240 326" strokeLinecap="round" transform="rotate(-90 70 70)" />
-                          <circle cx="70" cy="18" r="6" fill="#1E2124" stroke="var(--lime)" strokeWidth="2" />
-                        </svg>
-                        <div style={{ position: "absolute", textAlign: "center" }}>
-                          <span style={{ display: "block", fontSize: 18, fontWeight: 800, color: "#fff", lineHeight: 1 }}>74%</span>
-                          <small style={{ fontSize: 10, color: "var(--muted)", fontWeight: 600 }}>Assigned</small>
+                  {(() => {
+                    const assignedPct = kpi.total > 0 ? Math.round((kpi.assigned / kpi.total) * 100) : 0;
+                    const unassigned = kpi.total - kpi.assigned;
+                    return (
+                      <div style={{ display: "flex", gap: 24, justifyContent: "center", alignItems: "center", height: 180 }}>
+                        <div style={{ textAlign: "center" }}>
+                          <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", width: 140, height: 140 }}>
+                            <svg viewBox="0 0 140 140" width="140" height="140">
+                              <circle cx="70" cy="70" r="52" fill="none" stroke="rgba(198,255,0,.12)" strokeWidth="18" />
+                              <circle cx="70" cy="70" r="52" fill="none" stroke="var(--lime)" strokeWidth="18" strokeDasharray={`${Math.round((kpi.assigned / Math.max(kpi.total, 1)) * 326)} 326`} strokeLinecap="round" transform="rotate(-90 70 70)" />
+                              <circle cx="70" cy="18" r="6" fill="#1E2124" stroke="var(--lime)" strokeWidth="2" />
+                            </svg>
+                            <div style={{ position: "absolute", textAlign: "center" }}>
+                              <span style={{ display: "block", fontSize: 18, fontWeight: 800, color: "#fff", lineHeight: 1 }}>{assignedPct}%</span>
+                              <small style={{ fontSize: 10, color: "var(--muted)", fontWeight: 600 }}>Assigned</small>
+                            </div>
+                          </div>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: "#fff", marginTop: 6 }}>Assigned</div>
+                          <div style={{ fontSize: 11, color: "var(--muted)" }}>{kpi.assigned} of {kpi.total}</div>
+                        </div>
+                        <div style={{ textAlign: "center" }}>
+                          <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", width: 120, height: 120 }}>
+                            <svg viewBox="0 0 120 120" width="120" height="120">
+                              <circle cx="60" cy="60" r="44" fill="none" stroke="rgba(123,92,245,.15)" strokeWidth="16" />
+                              <circle cx="60" cy="60" r="44" fill="none" stroke="var(--purple)" strokeWidth="16" strokeDasharray={`${Math.round((unassigned / Math.max(kpi.total, 1)) * 276)} 276`} strokeLinecap="round" transform="rotate(-90 60 60)" />
+                              <circle cx="60" cy="16" r="5" fill="#1E2124" stroke="var(--purple)" strokeWidth="2" />
+                            </svg>
+                            <div style={{ position: "absolute", textAlign: "center" }}>
+                              <span style={{ display: "block", fontSize: 15, fontWeight: 800, color: "#fff", lineHeight: 1 }}>{100 - assignedPct}%</span>
+                              <small style={{ fontSize: 10, color: "var(--muted)", fontWeight: 600 }}>Open</small>
+                            </div>
+                          </div>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: "#fff", marginTop: 6 }}>Unassigned</div>
+                          <div style={{ fontSize: 11, color: "var(--muted)" }}>{unassigned} of {kpi.total}</div>
                         </div>
                       </div>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: "#fff", marginTop: 6 }}>Assigned</div>
-                      <div style={{ fontSize: 11, color: "var(--muted)" }}>184 of 248</div>
-                    </div>
-                    <div style={{ textAlign: "center" }}>
-                      <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", width: 120, height: 120 }}>
-                        <svg viewBox="0 0 120 120" width="120" height="120">
-                          <circle cx="60" cy="60" r="44" fill="none" stroke="rgba(123,92,245,.15)" strokeWidth="16" />
-                          <circle cx="60" cy="60" r="44" fill="none" stroke="var(--purple)" strokeWidth="16" strokeDasharray="72 276" strokeLinecap="round" transform="rotate(-90 60 60)" />
-                          <circle cx="60" cy="16" r="5" fill="#1E2124" stroke="var(--purple)" strokeWidth="2" />
-                        </svg>
-                        <div style={{ position: "absolute", textAlign: "center" }}>
-                          <span style={{ display: "block", fontSize: 15, fontWeight: 800, color: "#fff", lineHeight: 1 }}>26%</span>
-                          <small style={{ fontSize: 10, color: "var(--muted)", fontWeight: 600 }}>Open</small>
-                        </div>
-                      </div>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: "#fff", marginTop: 6 }}>Unassigned</div>
-                      <div style={{ fontSize: 11, color: "var(--muted)" }}>64 of 248</div>
-                    </div>
-                  </div>
+                    );
+                  })()}
                 </CardContent>
               </Card>
 

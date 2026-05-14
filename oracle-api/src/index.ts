@@ -3,6 +3,9 @@ import express from "express";
 import authRoutes from "./routes/auth";
 import assetsRoutes from "./routes/assets";
 import lookupRoutes from "./routes/lookup";
+import employeesRoutes from "./routes/employees";
+import sitesRoutes from "./routes/sites";
+import assignmentsRoutes from "./routes/assignments";
 
 const app = express();
 const PORT = process.env.PORT ?? 3001;
@@ -23,6 +26,9 @@ app.get("/health", (_req, res) => res.json({ status: "ok" }));
 app.use("/api/auth", authRoutes);
 app.use("/api/assets", assetsRoutes);
 app.use("/api/lookup", lookupRoutes);
+app.use("/api/employees", employeesRoutes);
+app.use("/api/sites", sitesRoutes);
+app.use("/api/assignments", assignmentsRoutes);
 
 app.listen(PORT, () => {
   console.log(`Oracle API running on port ${PORT}`);
